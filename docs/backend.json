@@ -15,11 +15,11 @@
           "description": "The date the lunch poll is for.",
           "format": "date"
         },
-        "yesCount": {
+        "joining": {
           "type": "number",
           "description": "The number of users who have confirmed lunch participation."
         },
-        "noCount": {
+        "notJoining": {
           "type": "number",
           "description": "The number of users who have declined lunch participation."
         }
@@ -27,8 +27,8 @@
       "required": [
         "id",
         "date",
-        "yesCount",
-        "noCount"
+        "joining",
+        "notJoining"
       ]
     },
     "UserResponse": {
@@ -50,8 +50,9 @@
           "description": "Unique identifier of the user who responded."
         },
         "response": {
-          "type": "boolean",
-          "description": "The user's response to the lunch poll (true for yes, false for no)."
+          "type": "string",
+          "description": "The user's response to the lunch poll ('joining' for yes, 'notJoining' for no).",
+          "enum": ["joining", "notJoining"]
         }
       },
       "required": [
@@ -77,7 +78,7 @@
           "schema": {
             "$ref": "#/backend/entities/LunchPoll"
           },
-          "description": "Stores daily lunch polls. Includes 'yesCount' and 'noCount' for real-time statistics.",
+          "description": "Stores daily lunch polls. Includes 'joining' and 'notJoining' for real-time statistics.",
           "params": [
             {
               "name": "lunchPollId",
@@ -107,6 +108,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the Lunch Polls application, focusing on daily poll creation, participation recording, real-time statistics, and historical data storage. The structure prioritizes authorization independence and efficient querying. We leverage path-based ownership for user responses to ensure security and simplicity.\n\nThe `lunch_polls` collection stores the daily polls, while `users/{userId}/responses` stores each user's responses to the polls. This design choice allows for easy retrieval of a user's poll responses without requiring complex queries. The `yesCount` and `noCount` fields in `lunch_polls` provide real-time statistics. There are no collaborative documents, so membership maps are not used.\n\nAuthorization Independence is achieved by storing the `userId` within the `/users/{userId}/responses` collection. This means that checking a user's access to their response only requires verifying the `userId` in the `request.auth.uid`, eliminating the need for `get()` calls to parent documents.\n\nThe structure supports QAPs by allowing straightforward `list` operations. Listing all polls is done via a collection group query on the `lunch_polls` collection. Listing a user's responses is achieved via a direct query on `/users/{userId}/responses`."
+    "reasoning": "The Firestore data structure is designed to support the Lunch Polls application, focusing on daily poll creation, participation recording, real-time statistics, and historical data storage. The structure prioritizes authorization independence and efficient querying. We leverage path-based ownership for user responses to ensure security and simplicity.\n\nThe `lunch_polls` collection stores the daily polls, while `users/{userId}/responses` stores each user's responses to the polls. This design choice allows for easy retrieval of a user's poll responses without requiring complex queries. The `joining` and `notJoining` fields in `lunch_polls` provide real-time statistics. There are no collaborative documents, so membership maps are not used.\n\nAuthorization Independence is achieved by storing the `userId` within the `/users/{userId}/responses` collection. This means that checking a user's access to their response only requires verifying the `userId` in the `request.auth.uid`, eliminating the need for `get()` calls to parent documents.\n\nThe structure supports QAPs by allowing straightforward `list` operations. Listing all polls is done via a collection group query on the `lunch_polls` collection. Listing a user's responses is achieved via a direct query on `/users/{userId}/responses`."
   }
 }

@@ -17,7 +17,7 @@ export default function Home() {
 
   // Perform anonymous sign-in if not already logged in
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && auth) {
       initiateAnonymousSignIn(auth);
     }
   }, [user, isUserLoading, auth]);
@@ -25,14 +25,14 @@ export default function Home() {
   // --- Real-time data fetching ---
 
   // Memoize the ref to prevent re-renders from useDoc
-  const pollRef = useMemoFirebase(() => getTodaysPollRef(firestore), [firestore]);
+  const pollRef = useMemoFirebase(() => firestore ? getTodaysPollRef(firestore) : null, [firestore]);
   
   // Fetch today's poll data in real-time
   const { data: pollData, isLoading: isPollLoading } = useDoc<{joining: number, notJoining: number}>(pollRef);
 
   // Memoize the ref for the user's response
   const userResponseRef = useMemoFirebase(() => 
-    user ? getUserResponseForTodayRef(firestore, user.uid) : null, 
+    firestore && user ? getUserResponseForTodayRef(firestore, user.uid) : null, 
     [firestore, user]
   );
   
@@ -46,9 +46,11 @@ export default function Home() {
     }
   }, [firestore]);
   
-  const poll: Poll = pollData 
-    ? { date: new Date(pollData.id).toISOString(), joining: pollData.joining, notJoining: pollData.notJoining }
-    : { date: new Date(pollRef.id).toISOString(), joining: 0, notJoining: 0 };
+  const poll: Poll = {
+    date: pollRef ? new Date(pollRef.id).toISOString() : new Date().toISOString(),
+    joining: pollData?.joining ?? 0,
+    notJoining: pollData?.notJoining ?? 0,
+  };
   
   const isLoading = isPollLoading || isUserResponseLoading || isUserLoading || !reports;
 

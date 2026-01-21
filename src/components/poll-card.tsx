@@ -9,19 +9,30 @@ import type { Poll, Vote } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useFirebase, useUser } from "@/firebase";
 
-export function PollCard({ initialPoll, userVote }: { initialPoll: Poll, userVote: Vote | null }) {
-  const [votedFor, setVotedFor] = useState<Vote | null>(userVote);
+type UserVote = Vote | boolean | null;
+
+export function PollCard({ initialPoll, userVote }: { initialPoll: Poll, userVote: UserVote }) {
+  
+  const getVoteFromStringOrBool = (vote: UserVote): Vote | null => {
+    if (vote === null || vote === undefined) return null;
+    if (typeof vote === 'boolean') {
+      return vote ? 'joining' : 'notJoining';
+    }
+    return vote;
+  }
+
+  const [votedFor, setVotedFor] = useState<Vote | null>(getVoteFromStringOrBool(userVote));
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   
   useEffect(() => {
-    setVotedFor(userVote);
+    setVotedFor(getVoteFromStringOrBool(userVote));
   }, [userVote]);
 
   const handleVote = (choice: Vote) => {
-    if (!user) {
+    if (!user || !firestore) {
         toast({ variant: "destructive", title: "로그인이 필요합니다." });
         return;
     }
@@ -44,7 +55,7 @@ export function PollCard({ initialPoll, userVote }: { initialPoll: Poll, userVot
   };
 
   const handleCancelVote = () => {
-    if (!votedFor || !user) return;
+    if (!votedFor || !user || !firestore) return;
     startTransition(async () => {
       try {
         await cancelVote(firestore, user.uid, votedFor);
