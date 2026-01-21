@@ -7,7 +7,7 @@ import { ThumbsUp, ThumbsDown, LoaderCircle, PartyPopper, Undo2, CalendarX } fro
 import { recordVote, cancelVote } from "@/lib/data";
 import type { Poll, Vote } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { useFirebase, useUser } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
 
 type UserVote = Vote | boolean | null;
 
@@ -24,7 +24,7 @@ export function PollCard({ initialPoll, userVote }: { initialPoll: Poll, userVot
   const [votedFor, setVotedFor] = useState<Vote | null>(getVoteFromStringOrBool(userVote));
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const { firestore } = useFirebase();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   
   useEffect(() => {

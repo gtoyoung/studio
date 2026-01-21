@@ -1,26 +1,28 @@
 'use client';
 
-import React, { useMemo, type ReactNode } from 'react';
-import { FirebaseProvider } from '@/firebase/provider';
-import { initializeFirebase } from '@/firebase';
+import { createContext, useContext } from 'react';
+import { Auth } from 'firebase/auth';
+import { Firestore } from 'firebase/firestore';
+import { auth, firestore } from './firebase-init';
 
-interface FirebaseClientProviderProps {
-  children: ReactNode;
-}
+// Create a context for the Firebase SDKs
+const FirebaseContext = createContext<{ auth: Auth; firestore: Firestore; }>({ auth, firestore });
 
-export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const firebaseServices = useMemo(() => {
-    // Initialize Firebase on the client side, once per component mount.
-    return initializeFirebase();
-  }, []); // Empty dependency array ensures this runs only once on mount
-
+// The provider component
+export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
   return (
-    <FirebaseProvider
-      firebaseApp={firebaseServices.firebaseApp}
-      auth={firebaseServices.auth}
-      firestore={firebaseServices.firestore}
-    >
+    <FirebaseContext.Provider value={{ auth, firestore }}>
       {children}
-    </FirebaseProvider>
+    </FirebaseContext.Provider>
   );
 }
+
+// Hook to use Firebase Auth
+export const useAuth = () => {
+  return useContext(FirebaseContext).auth;
+};
+
+// Hook to use Firestore
+export const useFirestore = () => {
+  return useContext(FirebaseContext).firestore;
+};

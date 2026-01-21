@@ -1,7 +1,7 @@
 'use client';
 
-import { UtensilsCrossed, LogIn, LogOut } from 'lucide-react';
-import { useUser, useFirebase, initiateGoogleSignIn, signOutUser } from '@/firebase';
+import { UtensilsCrossed, LogOut } from 'lucide-react';
+import { useUser, useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from './ui/skeleton';
@@ -13,23 +13,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
+import Link from 'next/link';
 
 export function Header() {
-  const { auth } = useFirebase();
+  const auth = useAuth();
   const { user, isUserLoading } = useUser();
-
-  const handleSignIn = () => {
-    if (auth) {
-      initiateGoogleSignIn(auth);
-    }
-  };
 
   const handleSignOut = () => {
     if (auth) {
-      signOutUser(auth);
+      auth.signOut();
     }
   };
+
+  const gotoAdmin = () => {
+    window.location.href = '/admin';
+  }
 
 
   return (
@@ -70,6 +68,12 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {user.isAdmin && 
+              <DropdownMenuItem onClick={gotoAdmin}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>관리자페이지</span>
+              </DropdownMenuItem>
+              }
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>로그아웃</span>
@@ -77,10 +81,14 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button onClick={handleSignIn}>
-            <LogIn className="mr-2 h-4 w-4" />
-            Google로 로그인
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild>
+              <Link href="/login">로그인</Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/signup">회원가입</Link>
+            </Button>
+          </div>
         )}
       </div>
     </header>

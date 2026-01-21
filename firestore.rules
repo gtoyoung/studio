@@ -1,129 +1,35 @@
-/**
- * Core Philosophy: This ruleset establishes a security model with two distinct access patterns.
- * First, it defines a public collection for lunch polls (`lunch_polls`) that all users,
- * including unauthenticated ones, can read. Writes to this collection are currently disabled
- * pending the implementation of an admin or ownership model. Second, it enforces a strict
- * user-ownership model for poll responses, ensuring that a user's private data is only
- * accessible to them.
- *
- * Data Structure: The data is organized into a top-level `lunch_polls` collection and
- * user-specific subcollections for their responses under `/users/{userId}/responses`. This
- * segregation provides a clear and secure boundary between public and private data.
- *
- * Key Security Decisions:
- * - Public Read on Polls: `lunch_polls` are publicly readable to allow any client to display
- *   poll information and vote counts.
- * - Restricted Poll Writes: Creation and modification of `lunch_polls` are disallowed by
- *   default as the data model lacks an ownership field (`creatorId`). This is a secure
- *   default that prevents vandalism. A TODO has been added to guide developers.
- * - Private User Responses: All data under `/users/{userId}` is strictly controlled. A user
- *   can only read, create, update, or delete their own responses.
- * - No User Listing: The top-level `/users` collection is not matched, preventing any
- *   possibility of listing all application users.
- *
- * Denormalization for Authorization: The `UserResponse` document contains a `userId` field.
- * This rule enforces that on creation, this `userId` field must match the user's
- * authenticated UID and the `{userId}` wildcard in the path. On update, this field is made
- * immutable, guaranteeing that ownership cannot be transferred. This avoids extra database
-*  reads and simplifies the rules logic significantly.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ------------------------------------------------------------------------
-    // Helper Functions
-    // ------------------------------------------------------------------------
-
-    /**
-     * Returns true if the user is signed in.
-     */
-    function isSignedIn() {
-      return request.auth != null;
+    // Helper function to check for admin privileges
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
-    /**
-     * Returns true if the requesting user's UID matches the provided userId.
-     * Used to grant access to a user's own data.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * Returns true if the document exists and the user is the owner.
-     * CRITICAL: Used for all update and delete operations to prevent modifying
-     * or deleting non-existent data and to enforce ownership.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * Validates that a new UserResponse document has its internal `userId`
-     * field correctly set to match the owner's path.
-     * Enforces relational integrity on create.
-     */
-    function isResponseForCorrectUser(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * Enforces that the internal `userId` field of a UserResponse document
-     * cannot be changed after creation.
-     * Enforces immutability of ownership on update.
-     */
-    function isResponseForCorrectUserOnUpdate() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    // ------------------------------------------------------------------------
-    // Collection Rules
-    // ------------------------------------------------------------------------
-
-    /**
-     * @description Controls access to user profile data.
-     * @path /users/{userId}
-     * @allow (get, create, update) A user can manage their own profile.
-     * @deny (delete) Users are not allowed to delete their own profile documents.
-     */
+    // Rules for the 'users' collection
     match /users/{userId} {
-      allow get, create, update: if isOwner(userId);
-      allow delete: if false;
+      // Admins can read any user's data. Users can only read their own.
+      allow get: if request.auth.uid == userId || isAdmin();
+      
+      // Admins can list all users.
+      allow list: if isAdmin();
+
+      // Users can create their own document upon signup.
+      allow create: if request.auth.uid == userId;
+      
+      // Users can update their own data.
+      allow update: if request.auth.uid == userId;
     }
 
-
-    /**
-     * @description Controls access to the daily lunch polls.
-     * @path /lunch_polls/{lunchPollId}
-     * @allow (get) Any user, signed in or not, can read a specific poll.
-     * @deny (create) A signed-in user cannot create a new poll because the schema is missing an ownership field.
-     * @principle Public Read with Owner-Only Writes. Writes are currently blocked for security.
-     */
-    match /lunch_polls/{lunchPollId} {
-      allow get: if true;
-      allow list: if true;
-
-      // Allow creation/update by authenticated users.
-      // The transaction logic in the app safely handles vote counting.
-      allow create, update: if isSignedIn();
-      // Deleting polls should be an admin-only task, so it's disallowed.
-      allow delete: if false;
-    }
-
-    /**
-     * @description Controls access to a user's individual poll responses.
-     * @path /users/{userId}/responses/{responseId}
-     * @allow (create) A signed-in user can create a response for themselves, provided the document's internal `userId` matches their own.
-     * @deny (get) A user cannot read another user's poll responses.
-     * @principle Enforces strict document ownership and validates relational integrity between the path and the document data.
-     */
-    match /users/{userId}/responses/{responseId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isResponseForCorrectUser(userId);
-      allow update: if isExistingOwner(userId) && isResponseForCorrectUserOnUpdate();
-      allow delete: if isExistingOwner(userId);
+    // Rules for the 'responses' collection
+    match /responses/{date}/participants/{userId} {
+      // Admins can read/write/delete any vote.
+      // Users can only read/write/delete their own vote.
+      allow read, write, delete: if request.auth.uid == userId || isAdmin();
+      
+      // Admins can list all votes for a given day.
+      allow list: if isAdmin();
     }
   }
 }
