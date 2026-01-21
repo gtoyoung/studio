@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, LoaderCircle, PartyPopper, Undo2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, LoaderCircle, PartyPopper, Undo2, CalendarX } from "lucide-react";
 import { submitVote, cancelVote } from "@/app/actions";
 import type { Poll, Vote } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -83,6 +83,8 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
   };
 
   const today = new Date(initialPoll.date);
+  const dayOfWeek = today.getDay();
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   const formattedDate = today.toLocaleDateString("ko-KR", {
     weekday: 'long',
     year: 'numeric',
@@ -96,11 +98,17 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="bg-card-foreground/5">
-        <CardTitle className="text-2xl font-bold font-headline">점심 같이 드실래요?</CardTitle>
+        <CardTitle className="text-2xl font-bold font-headline">오늘 점심 드시나요?</CardTitle>
         <CardDescription>{formattedDate}</CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        {hasVoted ? (
+        {isWeekend ? (
+           <div className="flex flex-col items-center justify-center text-center p-8 bg-muted/50 rounded-lg">
+             <CalendarX className="w-16 h-16 text-muted-foreground mb-4" />
+             <h3 className="text-xl font-bold">주말에는 투표할 수 없습니다.</h3>
+             <p className="text-muted-foreground">월요일에 다시 확인해주세요!</p>
+           </div>
+        ) : hasVoted ? (
           <div className="flex flex-col items-center justify-center text-center p-8 bg-accent/20 rounded-lg">
             <PartyPopper className="w-16 h-16 text-accent mb-4" />
             <h3 className="text-xl font-bold">투표해주셔서 감사합니다!</h3>
@@ -122,7 +130,7 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
               aria-live="polite"
             >
               {isLoading ? <LoaderCircle className="animate-spin" /> : <ThumbsUp className="mr-3 h-8 w-8" />}
-              참석해요!
+              참여
             </Button>
             <Button
               size="lg"
@@ -133,7 +141,7 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
               aria-live="polite"
             >
               {isLoading ? <LoaderCircle className="animate-spin" /> : <ThumbsDown className="mr-3 h-8 w-8" />}
-              다음에요
+              미참여
             </Button>
           </div>
         )}

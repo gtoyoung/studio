@@ -65,7 +65,11 @@ export async function getHistoricalData(): Promise<ReportData> {
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   const history = Object.entries(pollData)
-    .filter(([date]) => date !== todayStr)
+    .filter(([date]) => {
+      if (date === todayStr) return false;
+      const day = new Date(date).getDay();
+      return day > 0 && day < 6; // Monday to Friday
+    })
     .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime());
 
   const dailyBreakdown: DailyParticipation[] = history.map(([date, counts]) => {
@@ -76,13 +80,11 @@ export async function getHistoricalData(): Promise<ReportData> {
   let totalJoining = 0;
   let totalVotes = 0;
   const participationByDay: Record<string, { joining: number; total: number }> = {
-    '일': { joining: 0, total: 0 },
     '월': { joining: 0, total: 0 },
     '화': { joining: 0, total: 0 },
     '수': { joining: 0, total: 0 },
     '목': { joining: 0, total: 0 },
     '금': { joining: 0, total: 0 },
-    '토': { joining: 0, total: 0 },
   };
 
   history.forEach(([date, counts]) => {

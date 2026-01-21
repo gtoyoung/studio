@@ -8,7 +8,7 @@ export function Header() {
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground font-headline">
           점심 투표
         </h1>
-        <p className="mt-1 text-lg text-muted-foreground">오늘의 점심, 간단하게 결정하세요.</p>
+        <p className="mt-1 text-lg text-muted-foreground">오늘의 점심 여부를 알려주세요.</p>
       </div>
     </header>
   );
