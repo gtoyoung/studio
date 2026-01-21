@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "LunchPoll": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LunchPoll",
+      "type": "object",
+      "description": "Represents a daily lunch poll.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the LunchPoll entity."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date the lunch poll is for.",
+          "format": "date"
+        },
+        "yesCount": {
+          "type": "number",
+          "description": "The number of users who have confirmed lunch participation."
+        },
+        "noCount": {
+          "type": "number",
+          "description": "The number of users who have declined lunch participation."
+        }
+      },
+      "required": [
+        "id",
+        "date",
+        "yesCount",
+        "noCount"
+      ]
+    },
+    "UserResponse": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserResponse",
+      "type": "object",
+      "description": "Represents a user's response to a specific lunch poll.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserResponse entity."
+        },
+        "lunchPollId": {
+          "type": "string",
+          "description": "Reference to LunchPoll. (Relationship: LunchPoll 1:N UserResponse)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Unique identifier of the user who responded."
+        },
+        "response": {
+          "type": "boolean",
+          "description": "The user's response to the lunch poll (true for yes, false for no)."
+        }
+      },
+      "required": [
+        "id",
+        "lunchPollId",
+        "userId",
+        "response"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/lunch_polls/{lunchPollId}",
+        "definition": {
+          "entityName": "LunchPoll",
+          "schema": {
+            "$ref": "#/backend/entities/LunchPoll"
+          },
+          "description": "Stores daily lunch polls. Includes 'yesCount' and 'noCount' for real-time statistics.",
+          "params": [
+            {
+              "name": "lunchPollId",
+              "description": "Unique identifier for the lunch poll."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/responses/{responseId}",
+        "definition": {
+          "entityName": "UserResponse",
+          "schema": {
+            "$ref": "#/backend/entities/UserResponse"
+          },
+          "description": "Stores a user's response to a specific lunch poll. Path-based ownership enables simple security rules.  Authorization Independence is achieved as the userId is stored within the document and is used to validate against request.auth.uid.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier of the user who responded."
+            },
+            {
+              "name": "responseId",
+              "description": "Unique identifier for the user response."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the Lunch Polls application, focusing on daily poll creation, participation recording, real-time statistics, and historical data storage. The structure prioritizes authorization independence and efficient querying. We leverage path-based ownership for user responses to ensure security and simplicity.\n\nThe `lunch_polls` collection stores the daily polls, while `users/{userId}/responses` stores each user's responses to the polls. This design choice allows for easy retrieval of a user's poll responses without requiring complex queries. The `yesCount` and `noCount` fields in `lunch_polls` provide real-time statistics. There are no collaborative documents, so membership maps are not used.\n\nAuthorization Independence is achieved by storing the `userId` within the `/users/{userId}/responses` collection. This means that checking a user's access to their response only requires verifying the `userId` in the `request.auth.uid`, eliminating the need for `get()` calls to parent documents.\n\nThe structure supports QAPs by allowing straightforward `list` operations. Listing all polls is done via a collection group query on the `lunch_polls` collection. Listing a user's responses is achieved via a direct query on `/users/{userId}/responses`."
+  }
+}
