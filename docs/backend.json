@@ -97,6 +97,9 @@
   "auth": {
     "providers": [
       "google.com"
+    ],
+    "authorizedDomains": [
+      "studio-6823834543-894d6.firebaseapp.com"
     ]
   },
   "firestore": {
