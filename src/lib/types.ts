@@ -18,3 +18,5 @@ export type ReportData = {
   };
   dailyBreakdown: DailyParticipation[];
 };
+
+export type Vote = "joining" | "notJoining";

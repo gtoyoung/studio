@@ -3,9 +3,9 @@
 import { useState, useTransition, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, LoaderCircle, PartyPopper } from "lucide-react";
-import { submitVote, type Vote } from "@/app/actions";
-import type { Poll } from "@/lib/types";
+import { ThumbsUp, ThumbsDown, LoaderCircle, PartyPopper, Undo2 } from "lucide-react";
+import { submitVote, cancelVote } from "@/app/actions";
+import type { Poll, Vote } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const getVotedState = (): Vote | null => {
@@ -27,6 +27,11 @@ const setVotedState = (choice: Vote) => {
   localStorage.setItem("lunchPollVote", JSON.stringify({ date: today, choice }));
 };
 
+const removeVotedState = () => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem("lunchPollVote");
+};
+
 export function PollCard({ initialPoll }: { initialPoll: Poll }) {
   const [votedFor, setVotedFor] = useState<Vote | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -43,21 +48,42 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
         setVotedFor(choice);
         setVotedState(choice);
         toast({
-          title: "Vote submitted!",
-          description: "Thanks for participating.",
+          title: "투표 완료!",
+          description: "참여해주셔서 감사합니다.",
         });
       } else {
         toast({
           variant: "destructive",
-          title: "Oops!",
-          description: result.error || "Something went wrong.",
+          title: "죄송합니다!",
+          description: result.error || "문제가 발생했습니다.",
+        });
+      }
+    });
+  };
+
+  const handleCancelVote = () => {
+    if (!votedFor) return;
+    startTransition(async () => {
+      const result = await cancelVote(votedFor);
+      if (result.success) {
+        setVotedFor(null);
+        removeVotedState();
+        toast({
+          title: "투표가 취소되었습니다.",
+          description: "다시 투표할 수 있습니다.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "죄송합니다!",
+          description: result.error || "문제가 발생했습니다.",
         });
       }
     });
   };
 
   const today = new Date(initialPoll.date);
-  const formattedDate = today.toLocaleDateString("en-US", {
+  const formattedDate = today.toLocaleDateString("ko-KR", {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -70,15 +96,21 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="bg-card-foreground/5">
-        <CardTitle className="text-2xl font-bold font-headline">Will you be joining for lunch?</CardTitle>
+        <CardTitle className="text-2xl font-bold font-headline">점심 같이 드실래요?</CardTitle>
         <CardDescription>{formattedDate}</CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         {hasVoted ? (
           <div className="flex flex-col items-center justify-center text-center p-8 bg-accent/20 rounded-lg">
             <PartyPopper className="w-16 h-16 text-accent mb-4" />
-            <h3 className="text-xl font-bold">Thanks for voting!</h3>
-            <p className="text-muted-foreground">You voted <span className="font-semibold text-accent">{votedFor === 'joining' ? "Yes" : "No"}</span>.</p>
+            <h3 className="text-xl font-bold">투표해주셔서 감사합니다!</h3>
+            <p className="text-muted-foreground">
+              '<span className="font-semibold text-accent">{votedFor === 'joining' ? "참석" : "불참"}</span>'에 투표하셨습니다.
+            </p>
+            <Button variant="ghost" onClick={handleCancelVote} disabled={isLoading} className="mt-4">
+              {isLoading ? <LoaderCircle className="animate-spin" /> : <Undo2 className="mr-2 h-4 w-4" />}
+              투표 취소
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -90,7 +122,7 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
               aria-live="polite"
             >
               {isLoading ? <LoaderCircle className="animate-spin" /> : <ThumbsUp className="mr-3 h-8 w-8" />}
-              I'm in!
+              참석해요!
             </Button>
             <Button
               size="lg"
@@ -101,7 +133,7 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
               aria-live="polite"
             >
               {isLoading ? <LoaderCircle className="animate-spin" /> : <ThumbsDown className="mr-3 h-8 w-8" />}
-              Next time
+              다음에요
             </Button>
           </div>
         )}

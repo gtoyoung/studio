@@ -23,7 +23,7 @@ export default async function Home() {
         </div>
       </main>
       <footer className="w-full max-w-4xl py-8 mt-8 text-center text-muted-foreground text-sm">
-        <p>Made with ❤️ for lunch enthusiasts.</p>
+        <p>점심을 사랑하는 사람들을 위해 ❤️</p>
       </footer>
     </div>
   );

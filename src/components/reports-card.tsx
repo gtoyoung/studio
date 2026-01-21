@@ -13,11 +13,11 @@ import { TrendingUp, Award, CalendarDays } from "lucide-react";
 export function ReportsCard({ reports }: { reports: ReportData }) {
   const chartConfig = {
     joining: {
-      label: "Joining",
+      label: "참석",
       color: "hsl(var(--chart-1))",
     },
     notJoining: {
-        label: "Not Joining",
+        label: "불참",
         color: "hsl(var(--chart-2))",
     }
   };
@@ -27,9 +27,9 @@ export function ReportsCard({ reports }: { reports: ReportData }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="w-6 h-6" />
-          Participation Insights
+          참여 현황
         </CardTitle>
-        <CardDescription>Based on historical data from the past week.</CardDescription>
+        <CardDescription>지난 주 데이터를 기반으로 합니다.</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-6">
         <div className="grid grid-cols-2 gap-4 text-center">
@@ -37,7 +37,7 @@ export function ReportsCard({ reports }: { reports: ReportData }) {
             <CardHeader className="p-0 pb-2">
               <CardTitle className="text-sm font-medium flex items-center justify-center gap-2">
                 <CalendarDays className="w-4 h-4 text-muted-foreground" />
-                Avg. Participation
+                평균 참여율
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -48,7 +48,7 @@ export function ReportsCard({ reports }: { reports: ReportData }) {
             <CardHeader className="p-0 pb-2">
               <CardTitle className="text-sm font-medium flex items-center justify-center gap-2">
                 <Award className="w-4 h-4 text-muted-foreground" />
-                Popular Day
+                가장 인기있는 요일
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -58,7 +58,7 @@ export function ReportsCard({ reports }: { reports: ReportData }) {
         </div>
         
         <div>
-            <h4 className="text-sm font-medium mb-2">Weekly Breakdown</h4>
+            <h4 className="text-sm font-medium mb-2">주간 분석</h4>
              <ChartContainer config={chartConfig} className="w-full" style={{ height: '200px' }}>
                 <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={reports.dailyBreakdown} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>

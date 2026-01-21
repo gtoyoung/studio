@@ -47,6 +47,19 @@ export async function recordVote(choice: Vote): Promise<void> {
   pollData[todayStr][choice]++;
 }
 
+export async function cancelVote(choice: Vote): Promise<void> {
+  // Simulate async database write
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  if (!pollData[todayStr]) {
+    return;
+  }
+  
+  if (pollData[todayStr][choice] > 0) {
+    pollData[todayStr][choice]--;
+  }
+}
+
 export async function getHistoricalData(): Promise<ReportData> {
   // Simulate async data processing
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -56,28 +69,30 @@ export async function getHistoricalData(): Promise<ReportData> {
     .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime());
 
   const dailyBreakdown: DailyParticipation[] = history.map(([date, counts]) => {
-    const dayName = new Date(date).toLocaleDateString("en-US", { weekday: "short" });
+    const dayName = new Date(date).toLocaleDateString("ko-KR", { weekday: "short" });
     return { day: dayName, ...counts };
   });
 
   let totalJoining = 0;
   let totalVotes = 0;
   const participationByDay: Record<string, { joining: number; total: number }> = {
-    Sun: { joining: 0, total: 0 },
-    Mon: { joining: 0, total: 0 },
-    Tue: { joining: 0, total: 0 },
-    Wed: { joining: 0, total: 0 },
-    Thu: { joining: 0, total: 0 },
-    Fri: { joining: 0, total: 0 },
-    Sat: { joining: 0, total: 0 },
+    '일': { joining: 0, total: 0 },
+    '월': { joining: 0, total: 0 },
+    '화': { joining: 0, total: 0 },
+    '수': { joining: 0, total: 0 },
+    '목': { joining: 0, total: 0 },
+    '금': { joining: 0, total: 0 },
+    '토': { joining: 0, total: 0 },
   };
 
   history.forEach(([date, counts]) => {
     totalJoining += counts.joining;
     totalVotes += counts.joining + counts.notJoining;
-    const dayName = new Date(date).toLocaleDateString("en-US", { weekday: "short" });
-    participationByDay[dayName].joining += counts.joining;
-    participationByDay[dayName].total += counts.joining + counts.notJoining;
+    const dayName = new Date(date).toLocaleDateString("ko-KR", { weekday: "short" });
+    if (participationByDay[dayName]) {
+        participationByDay[dayName].joining += counts.joining;
+        participationByDay[dayName].total += counts.joining + counts.notJoining;
+    }
   });
 
   const averageParticipation = totalVotes > 0 ? (totalJoining / totalVotes) * 100 : 0;

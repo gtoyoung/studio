@@ -12,17 +12,17 @@ import { Users, CheckCircle, XCircle } from "lucide-react";
 
 export function StatsCard({ poll }: { poll: Poll }) {
   const chartData = [
-    { name: "Joining", value: poll.joining, fill: "hsl(var(--chart-1))" },
-    { name: "Not Joining", value: poll.notJoining, fill: "hsl(var(--chart-2))" },
+    { name: "참석", value: poll.joining, fill: "hsl(var(--chart-1))" },
+    { name: "불참", value: poll.notJoining, fill: "hsl(var(--chart-2))" },
   ];
 
   const chartConfig = {
     joining: {
-      label: "Joining",
+      label: "참석",
       color: "hsl(var(--chart-1))",
     },
     notJoining: {
-      label: "Not Joining",
+      label: "불참",
       color: "hsl(var(--chart-2))",
     },
   };
@@ -34,10 +34,10 @@ export function StatsCard({ poll }: { poll: Poll }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="w-6 h-6" />
-          Today's Turnout
+          오늘의 참여율
         </CardTitle>
         <CardDescription>
-          {totalVotes} people have responded so far.
+          현재까지 {totalVotes}명이 응답했습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-center items-center gap-6">
@@ -67,7 +67,7 @@ export function StatsCard({ poll }: { poll: Poll }) {
         ) : (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
             <Users className="w-12 h-12 mb-2" />
-            <p>No votes yet!</p>
+            <p>아직 투표가 없습니다!</p>
           </div>
         )}
 
@@ -75,12 +75,12 @@ export function StatsCard({ poll }: { poll: Poll }) {
           <div className="flex flex-col items-center gap-1">
             <CheckCircle className="w-6 h-6 text-green-500" />
             <span className="text-2xl font-bold">{poll.joining}</span>
-            <span className="text-sm text-muted-foreground">Joining</span>
+            <span className="text-sm text-muted-foreground">참석</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <XCircle className="w-6 h-6 text-red-500" />
             <span className="text-2xl font-bold">{poll.notJoining}</span>
-            <span className="text-sm text-muted-foreground">Not Joining</span>
+            <span className="text-sm text-muted-foreground">불참</span>
           </div>
         </div>
       </CardContent>
