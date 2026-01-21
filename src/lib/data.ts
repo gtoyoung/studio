@@ -1,69 +1,104 @@
-import type { Poll, ReportData, DailyParticipation, Vote } from "./types";
+'use client'; // This will be a client-side module
 
-// NOTE: This is a mock in-memory data store.
-// In a real application, you would use a database like Firestore.
-// The data is seeded for demonstration purposes.
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  getDocs,
+  runTransaction,
+  Timestamp,
+  DocumentReference,
+  WriteBatch,
+  writeBatch,
+  deleteDoc,
+  Firestore,
+} from "firebase/firestore";
+import type { Poll, ReportData, DailyParticipation, Vote, UserResponse } from "./types";
 
-const today = new Date();
-const todayStr = today.toLocaleDateString("en-CA"); // YYYY-MM-DD
-
-let pollData: Record<string, { joining: number; notJoining: number }> = {
-  [todayStr]: { joining: 8, notJoining: 3 },
-};
-
-// Seed some historical data for the last 7 days
-for (let i = 1; i <= 7; i++) {
-  const date = new Date();
-  date.setDate(today.getDate() - i);
-  const dateStr = date.toLocaleDateString("en-CA");
-  pollData[dateStr] = {
-    joining: Math.floor(Math.random() * 15) + 5,
-    notJoining: Math.floor(Math.random() * 5) + 1,
-  };
+function getTodayDateString() {
+    return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
 }
 
-export async function getTodaysPoll(): Promise<Poll> {
-  // Simulate async call
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  
-  if (!pollData[todayStr]) {
-    pollData[todayStr] = { joining: 0, notJoining: 0 };
-  }
+// These functions will be called from client components
+// and need access to the firestore instance.
 
-  return {
-    date: today.toISOString(),
-    ...pollData[todayStr],
-  };
+export const getTodaysPollRef = (firestore: Firestore) => {
+    const todayStr = getTodayDateString();
+    return doc(firestore, "lunch_polls", todayStr);
 }
 
-export async function recordVote(choice: Vote): Promise<void> {
-  // Simulate async database write
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  
-  if (!pollData[todayStr]) {
-    pollData[todayStr] = { joining: 0, notJoining: 0 };
-  }
-  
-  pollData[todayStr][choice]++;
+export const getUserResponseForTodayRef = (firestore: Firestore, userId: string) => {
+    const todayStr = getTodayDateString();
+    // Use a consistent ID for the user's response for a given day
+    return doc(firestore, `users/${userId}/responses`, todayStr);
 }
 
-export async function cancelVote(choice: Vote): Promise<void> {
-  // Simulate async database write
-  await new Promise((resolve) => setTimeout(resolve, 100));
+export async function recordVote(firestore: Firestore, userId: string, choice: Vote) {
+  const pollRef = getTodaysPollRef(firestore);
+  const userResponseRef = getUserResponseForTodayRef(firestore, userId);
 
-  if (!pollData[todayStr]) {
-    return;
-  }
-  
-  if (pollData[todayStr][choice] > 0) {
-    pollData[todayStr][choice]--;
-  }
+  await runTransaction(firestore, async (transaction) => {
+    const pollDoc = await transaction.get(pollRef);
+    
+    // Ensure poll document exists, if not, create it.
+    if (!pollDoc.exists()) {
+        transaction.set(pollRef, { joining: 0, notJoining: 0 });
+    }
+
+    // Set the user's vote
+    transaction.set(userResponseRef, {
+        lunchPollId: pollRef.id,
+        userId: userId,
+        response: choice,
+        date: pollRef.id,
+    });
+    
+    // Update the aggregate count
+    const newCount = (pollDoc.data()?.[choice] || 0) + 1;
+    transaction.update(pollRef, { [choice]: newCount });
+  });
 }
 
-export async function getHistoricalData(): Promise<ReportData> {
-  // Simulate async data processing
-  await new Promise((resolve) => setTimeout(resolve, 100));
+export async function cancelVote(firestore: Firestore, userId: string, previousChoice: Vote) {
+    const pollRef = getTodaysPollRef(firestore);
+    const userResponseRef = getUserResponseForTodayRef(firestore, userId);
 
+    await runTransaction(firestore, async (transaction) => {
+        const pollDoc = await transaction.get(pollRef);
+        const userResponseDoc = await transaction.get(userResponseRef);
+
+        if (!pollDoc.exists() || !userResponseDoc.exists()) {
+            // Nothing to cancel
+            return;
+        }
+
+        // Delete the user's response
+        transaction.delete(userResponseRef);
+
+        // Decrement the count, ensuring it doesn't go below 0
+        const currentCount = pollDoc.data()?.[previousChoice] || 0;
+        const newCount = Math.max(0, currentCount - 1);
+        transaction.update(pollRef, { [previousChoice]: newCount });
+    });
+}
+
+
+export async function getHistoricalData(firestore: Firestore): Promise<ReportData> {
+  const today = new Date();
+  const todayStr = today.toLocaleDateString("en-CA");
+
+  const pollsCollection = collection(firestore, "lunch_polls");
+  const q = query(pollsCollection);
+  const querySnapshot = await getDocs(q);
+
+  const pollData: Record<string, { joining: number; notJoining: number }> = {};
+  querySnapshot.forEach(doc => {
+    pollData[doc.id] = doc.data() as { joining: number; notJoining: number };
+  });
+  
   const history = Object.entries(pollData)
     .filter(([date]) => {
       if (date === todayStr) return false;

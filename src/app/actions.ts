@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { recordVote, cancelVote as cancelVoteInData } from "@/lib/data";
-import type { Vote } from "@/lib/types";
+// Note: The core logic has been moved to client-side components to work
+// with Firebase's real-time features and client authentication.
+// These server actions are kept for potential future use but are not
+// currently called by the voting components.
 
-export async function submitVote(choice: Vote) {
+export async function submitVote(choice: any) {
+  // This logic is now handled on the client in /src/components/poll-card.tsx
   try {
-    await recordVote(choice);
     revalidatePath("/");
     return { success: true };
   } catch (error) {
@@ -14,9 +16,9 @@ export async function submitVote(choice: Vote) {
   }
 }
 
-export async function cancelVote(previousChoice: Vote) {
+export async function cancelVote(previousChoice: any) {
+    // This logic is now handled on the client in /src/components/poll-card.tsx
   try {
-    await cancelVoteInData(previousChoice);
     revalidatePath("/");
     return { success: true };
   } catch (error) {

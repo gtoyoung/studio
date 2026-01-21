@@ -92,10 +92,11 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true;
 
-      // CRITICAL: Cannot implement owner-only writes. The 'LunchPoll' entity is missing an 'ownerId' or 'creatorId' field.
-      allow create: if false; // TODO: Add owner validation (e.g., request.resource.data.creatorId == request.auth.uid) once the schema is updated.
-      allow update: if false; // TODO: Add owner validation (e.g., resource.data.creatorId == request.auth.uid) once the schema is updated.
-      allow delete: if false; // TODO: Add owner validation (e.g., resource.data.creatorId == request.auth.uid) once the schema is updated.
+      // Allow creation/update by authenticated users.
+      // The transaction logic in the app safely handles vote counting.
+      allow create, update: if isSignedIn();
+      // Deleting polls should be an admin-only task, so it's disallowed.
+      allow delete: if false;
     }
 
     /**

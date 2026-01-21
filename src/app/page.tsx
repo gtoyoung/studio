@@ -1,24 +1,74 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { Header } from '@/components/header';
 import { PollCard } from '@/components/poll-card';
 import { StatsCard } from '@/components/stats-card';
 import { ReportsCard } from '@/components/reports-card';
-import { getTodaysPoll, getHistoricalData } from '@/lib/data';
+import { getTodaysPollRef, getHistoricalData, getUserResponseForTodayRef } from '@/lib/data';
+import { useFirebase, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import type { Poll, ReportData, UserResponse } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default async function Home() {
-  const poll = await getTodaysPoll();
-  const reports = await getHistoricalData();
+export default function Home() {
+  const { firestore, auth } = useFirebase();
+  const { user, isUserLoading } = useUser();
+  const [reports, setReports] = useState<ReportData | null>(null);
+
+  // Perform anonymous sign-in if not already logged in
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, auth]);
+
+  // --- Real-time data fetching ---
+
+  // Memoize the ref to prevent re-renders from useDoc
+  const pollRef = useMemoFirebase(() => getTodaysPollRef(firestore), [firestore]);
+  
+  // Fetch today's poll data in real-time
+  const { data: pollData, isLoading: isPollLoading } = useDoc<Poll>(pollRef);
+
+  // Memoize the ref for the user's response
+  const userResponseRef = useMemoFirebase(() => 
+    user ? getUserResponseForTodayRef(firestore, user.uid) : null, 
+    [firestore, user]
+  );
+  
+  // Fetch user's vote for today in real-time
+  const { data: userResponse, isLoading: isUserResponseLoading } = useDoc<UserResponse>(userResponseRef);
+
+  // --- One-time data fetching for historical reports ---
+  useEffect(() => {
+    getHistoricalData(firestore).then(setReports);
+  }, [firestore]);
+  
+  const poll: Poll = pollData 
+    ? { date: new Date(pollData.id).toISOString(), joining: pollData.joining, notJoining: pollData.notJoining }
+    : { date: new Date(pollRef.id).toISOString(), joining: 0, notJoining: 0 };
+  
+  const isLoading = isPollLoading || isUserResponseLoading || isUserLoading || !reports;
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <Header />
       <main className="w-full max-w-4xl mx-auto flex flex-col gap-8">
-        <PollCard initialPoll={poll} />
+        {isLoading ? (
+            <Skeleton className="h-[250px] w-full" />
+        ) : (
+            <PollCard
+                initialPoll={poll}
+                userVote={userResponse?.response ?? null}
+            />
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <StatsCard poll={poll} />
+            {isLoading ? <Skeleton className="h-[380px] w-full" /> : <StatsCard poll={poll} />}
           </div>
           <div className="lg:col-span-3">
-            <ReportsCard reports={reports} />
+            {isLoading || !reports ? <Skeleton className="h-[380px] w-full" /> : <ReportsCard reports={reports} />}
           </div>
         </div>
       </main>

@@ -1,7 +1,8 @@
 export type Poll = {
-  date: string;
+  date: string; // ISO string
   joining: number;
   notJoining: number;
+  id?: string; // document id from firestore
 };
 
 export type DailyParticipation = {
@@ -20,3 +21,11 @@ export type ReportData = {
 };
 
 export type Vote = "joining" | "notJoining";
+
+export type UserResponse = {
+    id?: string;
+    lunchPollId: string;
+    userId: string;
+    response: Vote;
+    date: string;
+};

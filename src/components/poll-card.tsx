@@ -4,79 +4,60 @@ import { useState, useTransition, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, LoaderCircle, PartyPopper, Undo2, CalendarX } from "lucide-react";
-import { submitVote, cancelVote } from "@/app/actions";
+import { recordVote, cancelVote } from "@/lib/data";
 import type { Poll, Vote } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { useFirebase, useUser } from "@/firebase";
 
-const getVotedState = (): Vote | null => {
-  if (typeof window === "undefined") return null;
-  const today = new Date().toLocaleDateString();
-  const storedVote = localStorage.getItem("lunchPollVote");
-  if (storedVote) {
-    const { date, choice } = JSON.parse(storedVote);
-    if (date === today) {
-      return choice;
-    }
-  }
-  return null;
-};
-
-const setVotedState = (choice: Vote) => {
-  if (typeof window === "undefined") return;
-  const today = new Date().toLocaleDateString();
-  localStorage.setItem("lunchPollVote", JSON.stringify({ date: today, choice }));
-};
-
-const removeVotedState = () => {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("lunchPollVote");
-};
-
-export function PollCard({ initialPoll }: { initialPoll: Poll }) {
-  const [votedFor, setVotedFor] = useState<Vote | null>(null);
+export function PollCard({ initialPoll, userVote }: { initialPoll: Poll, userVote: Vote | null }) {
+  const [votedFor, setVotedFor] = useState<Vote | null>(userVote);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-
-  useEffect(() => {
-    setVotedFor(getVotedState());
-  }, []);
+  const { firestore } = useFirebase();
+  const { user, isUserLoading } = useUser();
   
+  useEffect(() => {
+    setVotedFor(userVote);
+  }, [userVote]);
+
   const handleVote = (choice: Vote) => {
+    if (!user) {
+        toast({ variant: "destructive", title: "로그인이 필요합니다." });
+        return;
+    }
     startTransition(async () => {
-      const result = await submitVote(choice);
-      if (result.success) {
-        setVotedFor(choice);
-        setVotedState(choice);
+      try {
+        await recordVote(firestore, user.uid, choice);
         toast({
           title: "투표 완료!",
           description: "참여해주셔서 감사합니다.",
         });
-      } else {
+      } catch (error) {
+        console.error("Vote Error:", error);
         toast({
           variant: "destructive",
           title: "죄송합니다!",
-          description: result.error || "문제가 발생했습니다.",
+          description: "투표를 기록하는 중 문제가 발생했습니다.",
         });
       }
     });
   };
 
   const handleCancelVote = () => {
-    if (!votedFor) return;
+    if (!votedFor || !user) return;
     startTransition(async () => {
-      const result = await cancelVote(votedFor);
-      if (result.success) {
-        setVotedFor(null);
-        removeVotedState();
+      try {
+        await cancelVote(firestore, user.uid, votedFor);
         toast({
           title: "투표가 취소되었습니다.",
           description: "다시 투표할 수 있습니다.",
         });
-      } else {
+      } catch (error) {
+        console.error("Cancel Vote Error:", error);
         toast({
           variant: "destructive",
           title: "죄송합니다!",
-          description: result.error || "문제가 발생했습니다.",
+          description: "투표를 취소하는 중 문제가 발생했습니다.",
         });
       }
     });
@@ -93,7 +74,7 @@ export function PollCard({ initialPoll }: { initialPoll: Poll }) {
   });
 
   const hasVoted = votedFor !== null;
-  const isLoading = isPending;
+  const isLoading = isPending || isUserLoading;
 
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
