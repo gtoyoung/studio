@@ -6,21 +6,14 @@ import { PollCard } from '@/components/poll-card';
 import { StatsCard } from '@/components/stats-card';
 import { ReportsCard } from '@/components/reports-card';
 import { getTodaysPollRef, getHistoricalData, getUserResponseForTodayRef } from '@/lib/data';
-import { useFirebase, useUser, useDoc, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
+import { useFirebase, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import type { Poll, ReportData, UserResponse } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
-  const { firestore, auth } = useFirebase();
+  const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const [reports, setReports] = useState<ReportData | null>(null);
-
-  // Perform anonymous sign-in if not already logged in
-  useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      initiateAnonymousSignIn(auth);
-    }
-  }, [user, isUserLoading, auth]);
 
   // --- Real-time data fetching ---
 

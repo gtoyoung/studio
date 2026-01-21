@@ -82,6 +82,18 @@ service cloud.firestore {
     // ------------------------------------------------------------------------
 
     /**
+     * @description Controls access to user profile data.
+     * @path /users/{userId}
+     * @allow (get, create, update) A user can manage their own profile.
+     * @deny (delete) Users are not allowed to delete their own profile documents.
+     */
+    match /users/{userId} {
+      allow get, create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+
+    /**
      * @description Controls access to the daily lunch polls.
      * @path /lunch_polls/{lunchPollId}
      * @allow (get) Any user, signed in or not, can read a specific poll.

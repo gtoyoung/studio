@@ -4,8 +4,27 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
 } from 'firebase/auth';
+
+/** Initiate Google sign-in (non-blocking). */
+export function initiateGoogleSignIn(authInstance: Auth): void {
+  const provider = new GoogleAuthProvider();
+  // CRITICAL: Call signInWithPopup directly. Do NOT use 'await'.
+  signInWithPopup(authInstance, provider).catch((error) => {
+    // Handle errors here, such as user closing the popup.
+    console.error("Google Sign-In Error:", error);
+  });
+}
+
+/** Initiate user sign-out (non-blocking). */
+export function signOutUser(authInstance: Auth): void {
+  // CRITICAL: Call signOut directly. Do NOT use 'await'.
+  signOut(authInstance);
+}
+
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {

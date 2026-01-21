@@ -1,5 +1,33 @@
 {
   "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "type": "object",
+      "description": "Represents a user's profile information.",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL of the user's profile picture."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "email"
+      ]
+    },
     "LunchPoll": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LunchPoll",
@@ -52,7 +80,10 @@
         "response": {
           "type": "string",
           "description": "The user's response to the lunch poll ('joining' for yes, 'notJoining' for no).",
-          "enum": ["joining", "notJoining"]
+          "enum": [
+            "joining",
+            "notJoining"
+          ]
         }
       },
       "required": [
@@ -65,12 +96,27 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "google.com"
     ]
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. The document ID is the user's UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user."
+            }
+          ]
+        }
+      },
       {
         "path": "/lunch_polls/{lunchPollId}",
         "definition": {
