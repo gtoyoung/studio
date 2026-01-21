@@ -6,8 +6,7 @@ import { PollCard } from '@/components/poll-card';
 import { StatsCard } from '@/components/stats-card';
 import { ReportsCard } from '@/components/reports-card';
 import { getTodaysPollRef, getHistoricalData, getUserResponseForTodayRef } from '@/lib/data';
-import { useFirebase, useUser, useDoc, useMemoFirebase } from '@/firebase';
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { useFirebase, useUser, useDoc, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
 import type { Poll, ReportData, UserResponse } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -29,7 +28,7 @@ export default function Home() {
   const pollRef = useMemoFirebase(() => getTodaysPollRef(firestore), [firestore]);
   
   // Fetch today's poll data in real-time
-  const { data: pollData, isLoading: isPollLoading } = useDoc<Poll>(pollRef);
+  const { data: pollData, isLoading: isPollLoading } = useDoc<{joining: number, notJoining: number}>(pollRef);
 
   // Memoize the ref for the user's response
   const userResponseRef = useMemoFirebase(() => 
@@ -42,7 +41,9 @@ export default function Home() {
 
   // --- One-time data fetching for historical reports ---
   useEffect(() => {
-    getHistoricalData(firestore).then(setReports);
+    if (firestore) {
+      getHistoricalData(firestore).then(setReports);
+    }
   }, [firestore]);
   
   const poll: Poll = pollData 
