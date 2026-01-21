@@ -42,11 +42,6 @@ export async function recordVote(firestore: Firestore, userId: string, choice: V
 
   await runTransaction(firestore, async (transaction) => {
     const pollDoc = await transaction.get(pollRef);
-    
-    // Ensure poll document exists, if not, create it.
-    if (!pollDoc.exists()) {
-        transaction.set(pollRef, { joining: 0, notJoining: 0 });
-    }
 
     // Set the user's vote
     transaction.set(userResponseRef, {
@@ -56,9 +51,15 @@ export async function recordVote(firestore: Firestore, userId: string, choice: V
         date: pollRef.id,
     });
     
-    // Update the aggregate count
-    const newCount = (pollDoc.data()?.[choice] || 0) + 1;
-    transaction.update(pollRef, { [choice]: newCount });
+    // Update or create the poll document
+    if (pollDoc.exists()) {
+        const newCount = (pollDoc.data()[choice] || 0) + 1;
+        transaction.update(pollRef, { [choice]: newCount });
+    } else {
+        const newPoll = { joining: 0, notJoining: 0 };
+        newPoll[choice] = 1;
+        transaction.set(pollRef, newPoll);
+    }
   });
 }
 
