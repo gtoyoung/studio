@@ -33,7 +33,11 @@ export function PollCard({ initialPoll, userVote }: { initialPoll: Poll, userVot
 
   const handleVote = (choice: Vote) => {
     if (!user || !firestore) {
-        toast({ variant: "destructive", title: "로그인이 필요합니다.", description: "투표를 하려면 Google 계정으로 로그인해주세요." });
+        toast({
+          variant: "destructive",
+          title: "로그인이 필요합니다.",
+          description: "투표를 하려면 로그인해주세요.",
+        });
         return;
     }
     startTransition(async () => {
