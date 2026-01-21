@@ -1,20 +1,18 @@
 'use client';
 import {
   Auth, // Import Auth type for type hinting
-  signInAnonymously,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect, // Changed from signInWithPopup
   signOut,
 } from 'firebase/auth';
 
 /** Initiate Google sign-in (non-blocking). */
 export function initiateGoogleSignIn(authInstance: Auth): void {
   const provider = new GoogleAuthProvider();
-  // CRITICAL: Call signInWithPopup directly. Do NOT use 'await'.
-  signInWithPopup(authInstance, provider).catch((error) => {
-    // Handle errors here, such as user closing the popup.
+  // CRITICAL: Call signInWithRedirect directly. Do NOT use 'await'.
+  // Using redirect instead of popup to avoid popup blockers.
+  signInWithRedirect(authInstance, provider).catch((error) => {
+    // This catch block handles errors during the redirect initiation.
     console.error("Google Sign-In Error:", error);
   });
 }
@@ -23,26 +21,4 @@ export function initiateGoogleSignIn(authInstance: Auth): void {
 export function signOutUser(authInstance: Auth): void {
   // CRITICAL: Call signOut directly. Do NOT use 'await'.
   signOut(authInstance);
-}
-
-
-/** Initiate anonymous sign-in (non-blocking). */
-export function initiateAnonymousSignIn(authInstance: Auth): void {
-  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
-  signInAnonymously(authInstance);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
-}
-
-/** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
-  createUserWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
-}
-
-/** Initiate email/password sign-in (non-blocking). */
-export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
-  signInWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
