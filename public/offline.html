@@ -1,0 +1,18 @@
+export default function OfflinePage() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">오프라인 상태입니다</h1>
+        <p className="text-lg text-muted-foreground mb-8">
+          인터넷 연결을 확인해주세요.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+        >
+          다시 시도
+        </button>
+      </div>
+    </div>
+  );
+}
