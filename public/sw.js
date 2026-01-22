@@ -1,9 +1,10 @@
 const CACHE_NAME = 'lunch-vote-v1';
 const urlsToCache = [
-  '/',
-  '/offline.html',
-  '/icon-192x192.png',
-  '/icon-512x512.png',
+  "/",
+  "/offline.html",
+  "/icon-192.svg",
+  "/icon-512.svg",
+  "/manifest.json",
 ];
 
 // Install event

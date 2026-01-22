@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   icons: [
     { rel: "icon", url: "/favicon.ico" },
-    { rel: "apple-touch-icon", url: "/icon-192x192.png" },
+    { rel: "apple-touch-icon", url: "/icon-192.svg" },
   ],
 };
 
@@ -60,9 +60,15 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                  .then(reg => console.log('Service Worker registered'))
-                  .catch(err => console.log('Service Worker registration failed:', err));
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(reg => {
+                      console.log('Service Worker registered:', reg);
+                    })
+                    .catch(err => {
+                      console.log('Service Worker registration failed:', err);
+                    });
+                });
               }
             `,
           }}
