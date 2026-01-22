@@ -20,24 +20,28 @@ export default function SignUpPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("비밀번호가 일치하지 않습니다");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const result = await signUpWithEmailAndPassword(email, password, nickname);
+      const result = await signUpWithEmailAndPassword(
+        email,
+        password,
+        nickname,
+      );
       if (result.error) {
         setError(result.error);
       } else {
         router.push("/");
       }
     } catch (err) {
-        if (err instanceof Error) {
-            setError(err.message);
-        } else {
-            setError("An unknown error occurred.");
-        }
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("알 수 없는 오류가 발생했습니다.");
+      }
     } finally {
       setLoading(false);
     }
@@ -47,14 +51,14 @@ export default function SignUpPage() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardTitle>회원가입</CardTitle>
+          <CardDescription>새로운 계정을 만들어보세요</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="email">ID (Email)</Label>
+                <Label htmlFor="email">이메일</Label>
                 <Input
                   id="email"
                   type="email"
@@ -65,18 +69,18 @@ export default function SignUpPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="nickname">Nickname</Label>
+                <Label htmlFor="nickname">닉네임</Label>
                 <Input
                   id="nickname"
                   type="text"
-                  placeholder="Your Nickname"
+                  placeholder="닉네임을 입력하세요"
                   required
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">비밀번호</Label>
                 <Input
                   id="password"
                   type="password"
@@ -86,7 +90,7 @@ export default function SignUpPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirm-password">비밀번호 확인</Label>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -97,7 +101,7 @@ export default function SignUpPage() {
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing up..." : "Sign Up"}
+                {loading ? "가입 중..." : "회원가입"}
               </Button>
             </div>
           </form>

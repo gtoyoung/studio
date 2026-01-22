@@ -28,7 +28,7 @@ interface UserWithVote extends UserData {
 // Helper to get today's date in YYYY-MM-DD format
 const getTodayDateString = () => {
   const today = new Date();
-  return today.toLocaleDateString("en-CA"); // YYYY-MM-DD
+  return today.toLocaleDateString("ko-KR"); // YYYY-MM-DD
 };
 
 export default function AdminPage() {
