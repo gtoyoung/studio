@@ -51,6 +51,23 @@ export const useMessaging = () => {
     }
 
     if (Notification.permission === 'granted') {
+      if (messaging) {
+        try {
+          const token = await getToken(messaging, {
+            vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+          });
+          alert(token);
+          if (token) {
+            await fetch("/api/fcm/subscribe", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ token }),
+            });
+          }
+        } catch (error) {}
+      }
       return true;
     }
 
