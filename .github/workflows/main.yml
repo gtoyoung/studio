@@ -1,0 +1,18 @@
+name: 🍽️ Lunch Alarm
+
+on:
+  schedule:
+  # 매주 월~금 08:30 KST (UTC 기준 전날 23:30)
+  - cron: "30 23 * * 0-4"
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  send-lunch-alarm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Lunch Alarm API
+        run: |
+          curl -X POST "${{ secrets.LUNCH_API_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"
