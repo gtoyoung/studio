@@ -17,12 +17,9 @@ if (typeof window !== "undefined") {
       try {
         messaging = getMessaging(app);
         messagingInitialized = true;
-        console.log("Firebase Messaging initialized successfully");
       } catch (error) {
         console.error("Firebase Messaging initialization failed:", error);
       }
-    } else {
-      console.log("Firebase Messaging is not supported in this browser");
     }
   });
 }

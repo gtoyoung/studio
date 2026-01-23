@@ -17,12 +17,10 @@ export default function PushProvider() {
 
       if (registration.active) {
         registration.active.postMessage(message);
-        console.log("[PushProvider] sent to active SW");
       }
 
       if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage(message);
-        console.log("[PushProvider] sent to controller SW");
       }
     };
 
