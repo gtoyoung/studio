@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import PushProvider from "@/firebase/PushProvider";
 
 export const metadata: Metadata = {
   title: "점심 투표",
@@ -54,25 +55,11 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>{children}</FirebaseClientProvider>
+        <FirebaseClientProvider>
+          <PushProvider />
+          {children}
+        </FirebaseClientProvider>
         <Toaster />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(reg => {
-                      console.log('Service Worker registered:', reg);
-                    })
-                    .catch(err => {
-                      console.log('Service Worker registration failed:', err);
-                    });
-                });
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );

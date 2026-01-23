@@ -14,6 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from 'next/link';
+import { messaging } from "./../firebase/firebase-init";
+import { getToken } from "firebase/messaging";
 
 export function Header() {
   const auth = useAuth();
@@ -26,9 +28,23 @@ export function Header() {
   };
 
   const gotoAdmin = () => {
-    window.location.href = '/admin';
-  }
+    window.location.href = "/admin";
+  };
 
+  const handleGetFCMToken = async () => {
+    if (messaging) {
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+      });
+      if (token) {
+        await fetch("/api/fcm/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+      }
+    }
+  };
 
   return (
     <header className="flex flex-col sm:flex-row items-center justify-between w-full max-w-4xl pt-8 pb-12">
@@ -38,42 +54,56 @@ export function Header() {
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground font-headline">
             점심 투표
           </h1>
-          <p className="mt-1 text-lg text-muted-foreground">오늘의 점심 여부를 알려주세요.</p>
+          <p className="mt-1 text-lg text-muted-foreground">
+            오늘의 점심 여부를 알려주세요.
+          </p>
         </div>
       </div>
       <div className="mt-4 sm:mt-0">
         {isUserLoading ? (
-            <div className="flex items-center gap-2">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <Skeleton className="h-6 w-24" />
-            </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-6 w-24" />
+          </div>
         ) : user ? (
-            <DropdownMenu>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1 pr-2 sm:pr-4">
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 rounded-full p-1 pr-2 sm:pr-4"
+              >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                  <AvatarFallback>{user.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+                  <AvatarImage
+                    src={user.photoURL ?? ""}
+                    alt={user.displayName ?? "User"}
+                  />
+                  <AvatarFallback>
+                    {user.displayName?.charAt(0) ?? "U"}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline font-medium">{user.displayName}</span>
+                <span className="hidden sm:inline font-medium">
+                  {user.displayName}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {user.displayName}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {user.isAdmin && 
-              <DropdownMenuItem onClick={gotoAdmin}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>관리자페이지</span>
-              </DropdownMenuItem>
-              }
+              {user.isAdmin && (
+                <DropdownMenuItem onClick={gotoAdmin}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>관리자페이지</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>로그아웃</span>
@@ -87,6 +117,12 @@ export function Header() {
             </Button>
             <Button asChild variant="secondary">
               <Link href="/signup">회원가입</Link>
+            </Button>
+            <Button
+              className="bg-red-500 text-white"
+              onClick={handleGetFCMToken}
+            >
+              알림테스트
             </Button>
           </div>
         )}

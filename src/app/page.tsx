@@ -6,6 +6,8 @@ import { PollCard } from '@/components/poll-card';
 import { StatsCard } from '@/components/stats-card';
 import { ReportsCard } from '@/components/reports-card';
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
+import { FCMDebugger } from "@/components/FCMDebugger";
 import {
   getTodaysPollRef,
   getHistoricalData,
@@ -51,6 +53,7 @@ export default function Home() {
     <div className="flex flex-col items-center min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <Header />
       <PWAInstallPrompt />
+      <NotificationPermissionPrompt />
       <main className="w-full max-w-4xl mx-auto flex flex-col gap-8">
         {!user?.isAdmin &&
           (isLoading ? (
@@ -81,6 +84,9 @@ export default function Home() {
       <footer className="w-full max-w-4xl py-8 mt-8 text-center text-muted-foreground text-sm">
         <p>메이크잇 점심 참여 여부를 확인</p>
       </footer>
+
+      {/* FCM Debug Info */}
+      <FCMDebugger />
     </div>
   );
 }
