@@ -118,12 +118,12 @@ export function Header() {
             <Button asChild variant="secondary">
               <Link href="/signup">회원가입</Link>
             </Button>
-            <Button
+            {/* <Button
               className="bg-red-500 text-white"
               onClick={handleGetFCMToken}
             >
               알림테스트
-            </Button>
+            </Button> */}
           </div>
         )}
       </div>

@@ -7,7 +7,7 @@ import { StatsCard } from '@/components/stats-card';
 import { ReportsCard } from '@/components/reports-card';
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
-import { FCMDebugger } from "@/components/FCMDebugger";
+// import { FCMDebugger } from "@/components/FCMDebugger";
 import {
   getTodaysPollRef,
   getHistoricalData,
@@ -86,7 +86,7 @@ export default function Home() {
       </footer>
 
       {/* FCM Debug Info */}
-      <FCMDebugger />
+      {/* <FCMDebugger /> */}
     </div>
   );
 }

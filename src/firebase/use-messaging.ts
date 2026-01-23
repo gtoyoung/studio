@@ -63,7 +63,7 @@ export const useMessaging = () => {
           const token = await getToken(messaging, {
             vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
           });
-
+          alert(token);
           if (token) {
             await fetch("/api/fcm/subscribe", {
               method: "POST",

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       data: {
         type: "LUNCH_VOTE",
         date: today,
-        url: "/", // (옵션) SW에서 쓰고 싶으면 유지
+        url: "https://lunch.make-it.kro.kr/", // (옵션) SW에서 쓰고 싶으면 유지
       },
 
       webpush: {
