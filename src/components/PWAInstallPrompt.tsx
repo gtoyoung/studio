@@ -20,12 +20,15 @@ export function PWAInstallPrompt() {
   const detectBrowser = (): BrowserType => {
     const ua = navigator.userAgent;
 
-    if (/Chrome|CriOS/.test(ua) && !/Edg|OPR/.test(ua)) {
+    // Chrome, CriOS, Samsung Browser (Chrome 기반) 감지
+    if (/Chrome|CriOS|SamsungBrowser/.test(ua) && !/Edg|OPR/.test(ua)) {
       return "chrome";
     }
-    if (/Safari/.test(ua) && !/Chrome|CriOS|OPR/.test(ua)) {
+    // Safari (iOS, macOS) - Chrome과 겹치지 않게
+    if (/Safari/.test(ua) && !/Chrome|CriOS|OPR|SamsungBrowser/.test(ua)) {
       return "safari";
     }
+    // Firefox
     if (/Firefox|FxiOS/.test(ua)) {
       return "firefox";
     }
